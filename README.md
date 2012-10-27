@@ -85,6 +85,7 @@ module Endpoints
     get '/'
        Models::Person.all.to_json
     end
+  end
 end
 ```
 
