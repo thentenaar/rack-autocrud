@@ -56,21 +56,27 @@ module Rack
 
 				# Patch in the routes
 				endpoint_klass.class_exec(model_klass,endpoint,env) { |model,endpoint,env|
+					def set_request_body(new_body,content_type='text/json')
+						env['rack.input']     = StringIO.new(new_body)
+						env['CONTENT_LENGTH'] = new_body.length
+						env['CONTENT_TYPE']   = content_type
+						return nil
+					end
+
 					get '/' do
 						halt [403, '{ "error": "Access Denied" }']
 					end
 
 					post '/' do
-						obj = model.new(JSON.parse(request.body.read))
-						
 						# Call the pre-create hook
 						if self.respond_to?(:pre_create)
-							ret = pre_create(env,request,obj)
+							ret = pre_create(env,request)
 							return ret unless ret.nil?
 						end
 
-						obj.save
-						halt [402, '{ "error": "Failed to save ' + endpoint + '" }'] unless obj.saved?
+						request.body.rewind if request.body.respond_to?(:rewind)
+						obj = model.create(JSON.parse(request.body.read))
+						halt [402, '{ "error": "Failed to save ' + endpoint + '" }'] unless obj && obj.saved?
 
 						# Call the post-create hook
 						if self.respond_to?(:post_create)
@@ -106,6 +112,7 @@ module Rack
 							return ret unless ret.nil?
 						end
 
+						request.body.rewind if request.body.respond_to?(:rewind)
 						saved = model.update(JSON.parse(request.body.read))
 						halt [403, 'Access Denied'] unless saved
 

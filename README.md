@@ -22,6 +22,7 @@ Requirements
 
 * sinatra
 * datamapper
+* json
 
 Installation
 ============
@@ -99,7 +100,7 @@ There are some basic processing hooks you can define in your endpoint:
 
 |             Hook               |                        Description                               |
 | ------------------------------ | ---------------------------------------------------------------- |
-| pre_create(env,request,obj)    | Called after the record is created, but before it's saved        |
+| pre_create(env,request)        | Called before the record is created                              |
 | post_create(env,request,obj)   | Called after the record is saved, if it was saved successfully   |
 | pre_retrieve(env,request)      | Called before the record is fetched                              |
 | post_retrieve(env,request,obj) | Called after the record is fetched                               |
@@ -117,4 +118,17 @@ Parameters:
 If any of these hooks returns anything other than _nil_, it is assumed to be a response object, which
 is returned immediately, and no further processing is performed.
 
+Helper Functions
+================
+
+This middleware also adds a helper function to the endpoints, *set_request_body*, to allow 
+you to replace the request body from the aforementioned hooks, 
+namely *pre_create* and *pre_update*.
+
+This function is defined as:
+```ruby
+def set_request_body(new_body,content_type='text/json')
+```
+
+where *new_body* is expected to be a string.
 
