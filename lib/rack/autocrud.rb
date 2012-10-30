@@ -74,9 +74,17 @@ module Rack
 							return ret unless ret.nil?
 						end
 
+						# Rewind the body
 						request.body.rewind if request.body.respond_to?(:rewind)
-						obj = model.create(JSON.parse(request.body.read))
-						halt [402, '{ "error": "Failed to save ' + endpoint + '" }'] unless obj && obj.saved?
+
+						# Attempt to create the model object
+						obj = nil
+						begin
+							obj = model.create(JSON.parse(request.body.read))
+							halt [402, '{ "error": "Failed to save ' + endpoint + '" }'] unless obj && obj.saved?
+						rescue JSON::ParserError
+							halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
+						end
 
 						# Call the post-create hook
 						if self.respond_to?(:post_create)
@@ -112,9 +120,16 @@ module Rack
 							return ret unless ret.nil?
 						end
 
+						# Rewind the body
 						request.body.rewind if request.body.respond_to?(:rewind)
-						saved = model.update(JSON.parse(request.body.read))
-						halt [403, 'Access Denied'] unless saved
+
+						# Attempt to update the model
+						begin
+							saved = model.update(JSON.parse(request.body.read))
+							halt [403, 'Access Denied'] unless saved
+						rescue JSON::ParserError
+							halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
+						end
 
 						# Call the post-update hook
 						if self.respond_to?(:post_update)
