@@ -63,9 +63,9 @@ _config.ru_. This middleware will dynamically create a _Sinatra::Base_ subclass 
 | Route       |           Action               | HTTP Response Code |
 | ----------- | -------------------------------| ------------------ |
 | get /       | List all _Person_ entries      |      403           |
-| post /      | Create a new _Person_          |      201 / 403     |
+| post /      | Create a new _Person_          |      201 / 402     |
 | get /:id    | Retrieve a _Person_            |      200           |
-| put /:id    | Update a _Person_              |      201 / 403     |
+| put /:id    | Update a _Person_              |      201 / 402     |
 | delete /:id | Destroy a _Person_             |      204           |
 
 The middleware will route based on the URI. Thus, _/person_ would correspond to *Endpoints::Person*'s _get /_ route.

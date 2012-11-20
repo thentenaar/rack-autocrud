@@ -87,8 +87,8 @@ module Rack
             # Attempt to create the model object
             obj = nil
             begin
-              obj = model.create(JSON.parse(request.body.read))
-              halt [ 403, '{ "error": "Failed to save ' + endpoint + '" }' ] unless obj && obj.saved?
+              obj = model.new(JSON.parse(request.body.read))
+              halt [ 402, '{ "error": "Failed to save ' + endpoint + '" }' ] unless obj && obj.saved?
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
             end
@@ -133,7 +133,7 @@ module Rack
             # Attempt to update the model
             begin
               saved = model.update(JSON.parse(request.body.read).merge(:id => params[:id]))
-              halt [ 403, '{ "error": "Access Denied" }' ] unless saved
+              halt [ 402, '{ "error": "Access Denied" }' ] unless saved
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
             end
