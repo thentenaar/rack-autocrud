@@ -20,6 +20,7 @@ module Rack
       @app                = app
       @model_namespace    = options[:model_namespace]
       @endpoint_namespace = options[:endpoint_namespace]
+      @includes           = options[:includes]
       @endpoint_mod       = nil
     end
 
@@ -57,6 +58,9 @@ module Rack
           @endpoint_mod.const_set(endpoint.capitalize,endpoint_klass)
         end
 
+        # Add in any specified helpers
+        @includes.each { |inc| endpoint_klass.send(:include,inc) } unless @includes.nil?
+
         # Patch in the routes
         endpoint_klass.class_exec(model_klass,endpoint,env) { |model,endpoint,env|
           def set_request_body(new_body,content_type='text/json')
@@ -67,13 +71,13 @@ module Rack
           end
 
           get '/' do
-            halt [403, '{ "error": "Access Denied" }']
+            halt [ 403, '{ "error": "Access Denied" }' ]
           end
 
           post '/' do
             # Call the pre-create hook
             if self.respond_to?(:pre_create)
-              ret = pre_create(env,request)
+              ret = pre_create(env,request,params)
               return ret unless ret.nil?
             end
 
@@ -84,7 +88,7 @@ module Rack
             obj = nil
             begin
               obj = model.create(JSON.parse(request.body.read))
-              halt [402, '{ "error": "Failed to save ' + endpoint + '" }'] unless obj && obj.saved?
+              halt [ 403, '{ "error": "Failed to save ' + endpoint + '" }' ] unless obj && obj.saved?
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
             end
@@ -101,7 +105,7 @@ module Rack
           get '/:id' do
             # Call the pre-retrieve hook
             if self.respond_to?(:pre_retrieve)
-              ret = pre_retrieve(env,request)
+              ret = pre_retrieve(env,request,params)
               return ret unless ret.nil?
             end
 
@@ -119,7 +123,7 @@ module Rack
           put '/:id' do
             # Call the pre-update hook
             if self.respond_to?(:pre_update)
-              ret = pre_update(env,request)
+              ret = pre_update(env,request,params)
               return ret unless ret.nil?
             end
 
@@ -128,15 +132,15 @@ module Rack
 
             # Attempt to update the model
             begin
-              saved = model.update(JSON.parse(request.body.read))
-              halt [403, 'Access Denied'] unless saved
+              saved = model.update(JSON.parse(request.body.read).merge(:id => params[:id]))
+              halt [ 403, '{ "error": "Access Denied" }' ] unless saved
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
             end
 
             # Call the post-update hook
             if self.respond_to?(:post_update)
-              ret = post_update(env,request)
+              ret = post_update(env,request,params)
               return ret unless ret.nil?
             end
 
@@ -146,12 +150,12 @@ module Rack
           delete '/:id' do
             # Call the pre-destroy hook
             if self.respond_to?(:pre_destroy)
-              ret = pre_destroy(env,request)
+              ret = pre_destroy(env,request,params)
               return ret unless ret.nil?
             end
 
             obj = model.get(params[:id])
-            obj.destroy if obj
+            obj.destroy! if obj
 
             # Call the post-destroy hook
             if self.respond_to?(:post_destroy)

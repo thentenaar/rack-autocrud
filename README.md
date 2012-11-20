@@ -63,7 +63,7 @@ _config.ru_. This middleware will dynamically create a _Sinatra::Base_ subclass 
 | Route       |           Action               | HTTP Response Code |
 | ----------- | -------------------------------| ------------------ |
 | get /       | List all _Person_ entries      |      403           |
-| post /      | Create a new _Person_          |      201 / 402     |
+| post /      | Create a new _Person_          |      201 / 403     |
 | get /:id    | Retrieve a _Person_            |      200           |
 | put /:id    | Update a _Person_              |      201 / 403     |
 | delete /:id | Destroy a _Person_             |      204           |
@@ -98,16 +98,16 @@ CRUD Processing Hooks
 
 There are some basic processing hooks you can define in your endpoint:
 
-|             Hook               |                        Description                               |
-| ------------------------------ | ---------------------------------------------------------------- |
-| pre_create(env,request)        | Called before the record is created                              |
-| post_create(env,request,obj)   | Called after the record is saved, if it was saved successfully   |
-| pre_retrieve(env,request)      | Called before the record is fetched                              |
-| post_retrieve(env,request,obj) | Called after the record is fetched                               |
-| pre_update(env,request)        | Called before the record is updated                              |
-| post_update(env,request)       | Called after the record is updated, if it was saved successfully |
-| pre_destroy(env,request)       | Called before the record is destroyed                            |
-| post_destroy(env,request,obj)  | Called after the record is destroyed                             |
+|             Hook                 |                        Description                               |
+| -------------------------------- | ---------------------------------------------------------------- |
+| pre_create(env,request,params)   | Called before the record is created                              |
+| post_create(env,request,obj)     | Called after the record is saved, if it was saved successfully   |
+| pre_retrieve(env,request,params) | Called before the record is fetched                              |
+| post_retrieve(env,request,obj)   | Called after the record is fetched                               |
+| pre_update(env,request,params)   | Called before the record is updated                              |
+| post_update(env,request,params)  | Called after the record is updated, if it was saved successfully |
+| pre_destroy(env,request,params)  | Called before the record is destroyed                            |
+| post_destroy(env,request,obj)    | Called after the record is destroyed                             |
 
 Parameters:
 
@@ -131,4 +131,16 @@ def set_request_body(new_body,content_type='text/json')
 ```
 
 where *new_body* is expected to be a string.
+
+Auto-Inclusion of Other Modules
+===============================
+
+This middleware also takes an option _:includes_ which can be used to automatically
+include other modules (e.g. helpers) when creating and/or patching endpoints.
+
+For example:
+
+```ruby
+use Rack::AutoCRUD, :model_namespace => 'Models', :endpoint_namespace => 'Endpoints', :includes => [ Your::HelperModule ]
+```
 
