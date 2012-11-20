@@ -22,6 +22,7 @@ module Rack
       @endpoint_namespace = options[:endpoint_namespace]
       @includes           = options[:includes]
       @endpoint_mod       = nil
+      @model_mod          = nil
     end
 
     def call(env)
@@ -43,15 +44,27 @@ module Rack
         endpoint_klass = klass if String(klass.name).downcase == String(@endpoint_namespace + '::' + endpoint).downcase
       }
 
-      # Lazily locate the endpoint namespace module (if we haven't already)
-      if endpoint_klass.nil? && @endpoint_mod.nil?
+      # Lazily locate the model namespace module (if we haven't already)
+      if @model_mod.nil?
         ObjectSpace.each_object(Module) { |klass|
-          @endpoint_mod = klass if String(klass.name).downcase == @endpoint_namespace.downcase 
+          @model_mod = klass if String(klass.name).downcase == @model_namespace.downcase
         }
       end
 
+      # Lazily locate the endpoint namespace module (if we haven't already)
+      if endpoint_klass.nil? && @endpoint_mod.nil?
+        ObjectSpace.each_object(Module) { |klass|
+          @endpoint_mod = klass if String(klass.name).downcase == @endpoint_namespace.downcase
+        }
+      end
+
+      # Make sure we copy the :EXPOSE constant if it's defined upstream
+      if !model_klass.const_defined?(:EXPOSE) && @model_mod.const_defined?(:EXPOSE)
+        model_klass.const_set(:EXPOSE,@model_mod.const_get(:EXPOSE))
+      end
+
       # Now, if we've got something, do our magic.
-      if !model_klass.nil?
+      if !model_klass.nil? && (!model_klass.const_defined?(:EXPOSE) || model_klass.const_get(:EXPOSE))
         # If we don't have an endpoint class, make one
         if endpoint_klass.nil?
           endpoint_klass = Class.new(Sinatra::Base)

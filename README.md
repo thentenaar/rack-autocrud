@@ -118,6 +118,49 @@ Parameters:
 If any of these hooks returns anything other than _nil_, it is assumed to be a response object, which
 is returned immediately, and no further processing is performed.
 
+Selective Exposure
+==================
+
+All models in the namespace passed to _Rack::AutoCRUD_ are exposed by default.
+
+You can selectively hide models by defining a constant called _EXPOSE_ in your model definition.
+A value of 0 will cause _Rack::AutoCRUD_ to *not* create and endpoint for that particular model.
+
+Example:
+```ruby
+module Models
+  class Person
+    include DataMapper::Resource
+
+    property :id,   Serial
+    property :name, String
+
+    # Don't expose this model via AutoCRUD
+    EXPOSE = 0
+  end
+end
+```
+
+If you want to *not* expose all models by default, simply define the constant as part of the _Models_ module:
+
+```ruby
+module Models
+  # Hide all models by default
+  EXPOSE = 0
+end
+
+module Models
+  class ExposeMe
+    include DataMapper::Resource
+
+    property :id, Serial
+
+    # Expose this model
+    EXPOSE = 1
+  end
+end
+```
+
 Helper Functions
 ================
 
