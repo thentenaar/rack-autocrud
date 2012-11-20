@@ -33,6 +33,9 @@ module Rack
       verb,endpoint,*uri = env['REQUEST_URI'].split('/')
       verb               = env['REQUEST_METHOD'].downcase
 
+      # If this is to '/' pass it on
+      return @app.call(env) if endpoint.nil?
+
       # Enumerate through all defined classes, checking for the model / endpoint
       ObjectSpace.each_object(Class) { |klass|
         model_klass    = klass if String(klass.name).downcase == String(@model_namespace    + '::' + endpoint).downcase
