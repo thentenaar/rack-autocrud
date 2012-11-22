@@ -59,7 +59,7 @@ module Rack
       end
 
       # Make sure we copy the :EXPOSE constant if it's defined upstream
-      if !model_klass.const_defined?(:EXPOSE) && @model_mod.const_defined?(:EXPOSE)
+      if !model_klass.nil? && !model_klass.const_defined?(:EXPOSE) && @model_mod.const_defined?(:EXPOSE)
         model_klass.const_set(:EXPOSE,@model_mod.const_get(:EXPOSE))
       end
 
