@@ -32,7 +32,7 @@ module Rack
     def _call(env)
       model_klass        = nil
       endpoint_klass     = nil
-      verb,endpoint,*uri = env['REQUEST_URI'].split('/')
+      verb,endpoint,*uri = env['PATH_INFO'].split('/')
       verb               = env['REQUEST_METHOD'].downcase
 
       # If this is to '/' pass it on
