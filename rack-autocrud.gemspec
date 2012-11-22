@@ -1,6 +1,6 @@
 Gem::Specification.new do |gem|
   gem.name        = 'rack-autocrud'
-  gem.version     = '0.1.11'
+  gem.version     = '0.1.12'
   gem.author      = 'Tim Hentenaar'
   gem.email       = 'tim.hentenaar@gmail.com'
   gem.homepage    = 'https://github.com/thentenaar/rack-autocrud'
