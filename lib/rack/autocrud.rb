@@ -100,7 +100,7 @@ module Rack
             # Attempt to create the model object
             obj = nil
             begin
-              obj = model.new(JSON.parse(request.body.read))
+              obj = model.create(JSON.parse(request.body.read))
               halt [ 402, '{ "error": "Failed to save ' + endpoint + '" }' ] unless obj && obj.saved?
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
