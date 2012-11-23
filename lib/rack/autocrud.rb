@@ -168,7 +168,7 @@ module Rack
             end
 
             obj = model.get(params[:id])
-            obj.destroy! if obj
+            return [ 402, '{ "error": "Failed to delete ' + endpoint + '" }' ] unless obj && obj.destroy
 
             # Call the post-destroy hook
             if self.respond_to?(:post_destroy)
