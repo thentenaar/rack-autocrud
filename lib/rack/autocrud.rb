@@ -145,7 +145,7 @@ module Rack
 
             # Attempt to update the model
             begin
-              saved = model.update(JSON.parse(request.body.read).merge(:id => params[:id]))
+              saved = model.get(params[:id]).update(JSON.parse(request.body.read))
               halt [ 402, '{ "error": "Access Denied" }' ] unless saved
             rescue JSON::ParserError
               halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
