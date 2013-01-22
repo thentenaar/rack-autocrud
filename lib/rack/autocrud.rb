@@ -20,7 +20,8 @@ module Rack
       @app                = app
       @model_namespace    = options[:model_namespace]
       @endpoint_namespace = options[:endpoint_namespace]
-      @includes           = options[:includes]
+      @includes           = options[:includes]     || []
+      @sinatra_opts       = options[:sinatra_opts] || {}
       @endpoint_mod       = nil
       @model_mod          = nil
     end
@@ -73,6 +74,9 @@ module Rack
 
         # Add in any specified helpers
         @includes.each { |inc| endpoint_klass.send(:include,inc) } unless @includes.nil?
+
+        # Set any Sinatra options
+        @sinatra_opts.each { |sopt,val| endpoint_klass.send(:set,sopt,val) }
 
         # Patch in the routes
         endpoint_klass.class_exec(model_klass,endpoint,env) { |model,endpoint,env|

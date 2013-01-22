@@ -53,6 +53,33 @@ This would assume you only want CRUD-based routing. You can also _use_ this midd
 use Rack::AutoCRUD, :model_namespace => 'Models', :endpoint_namespace => 'Endpoints'
 ```
 
+Auto-Inclusion of Other Modules
+===============================
+
+This middleware also takes an option _:includes_ which can be used to automatically
+include other modules (e.g. helpers) when creating and/or patching endpoints.
+
+For example:
+
+```ruby
+use Rack::AutoCRUD, :model_namespace => 'Models', :endpoint_namespace => 'Endpoints', :includes => [ Your::HelperModule ]
+```
+
+Setting Sinatra Options
+=======================
+
+You can set Sinatra options for your auto-generated endpoints by passing the ``:sinatra_opts``
+option to this middleware.
+
+For example:
+
+```ruby
+use Rack::AutoCRUD, :model_namespace => 'Models', :endpoint_namespace => 'Endpoints', :sinatra_opts => { :sessions => true }
+```
+
+Which can be extremely useful if you're handling sessions at a higher level than the
+auto-generated endpoints.
+
 How Routing Works
 =================
 
@@ -174,16 +201,4 @@ def set_request_body(new_body,content_type='text/json')
 ```
 
 where *new_body* is expected to be a string.
-
-Auto-Inclusion of Other Modules
-===============================
-
-This middleware also takes an option _:includes_ which can be used to automatically
-include other modules (e.g. helpers) when creating and/or patching endpoints.
-
-For example:
-
-```ruby
-use Rack::AutoCRUD, :model_namespace => 'Models', :endpoint_namespace => 'Endpoints', :includes => [ Your::HelperModule ]
-```
 
