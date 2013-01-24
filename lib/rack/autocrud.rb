@@ -64,6 +64,11 @@ module Rack
         model_klass.const_set(:EXPOSE,@model_mod.const_get(:EXPOSE))
       end
 
+      # Make sure we copy the :COLLECTABLE constant if it's defined upstream
+      if !model_klass.nil? && !model_klass.const_defined?(:COLLECTABLE) && @model_mod.const_defined?(:COLLECTABLE)
+        model_klass.const_set(:COLLECTABLE,@model_mod.const_get(:COLLECTABLE))
+      end
+
       # Now, if we've got something, do our magic.
       if !model_klass.nil? && (!model_klass.const_defined?(:EXPOSE) || model_klass.const_get(:EXPOSE))
         # If we don't have an endpoint class, make one
@@ -88,7 +93,24 @@ module Rack
           end
 
           get '/' do
-            halt [ 403, '{ "error": "Access Denied" }' ]
+            halt [ 403, '{ "error": "Access Denied" }' ] unless model_klass.const_defined?(:COLLECTABLE) && model.const_get(:COLLECTABLE)
+
+            # Call the pre-create hook
+            if self.respond_to?(:pre_collect)
+              ret = pre_collect(env,request,params)
+              return ret unless ret.nil?
+            end
+
+            # Get the collection
+            collection = model.all
+
+            # Call the post-collect hook
+            if self.respond_to?(:post_collect)
+              ret = post_collect(env,request,collection)
+              return ret unless ret.nil?
+            end
+
+            collection.to_json
           end
 
           post '/' do
@@ -185,7 +207,8 @@ module Rack
         }
 
         # Now, call the endpoint class (assuming it will return a response)
-        env['PATH_INFO'] = '/' + uri.join('/')
+        env['PATH_INFO']    = '/' + uri.join('/')
+        env['CONTENT_TYPE'] = 'text/json'
         return endpoint_klass.call(env)
       end
 

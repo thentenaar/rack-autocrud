@@ -89,7 +89,7 @@ _config.ru_. This middleware will dynamically create a _Sinatra::Base_ subclass 
 
 | Route       |           Action               | HTTP Response Code |
 | ----------- | -------------------------------| ------------------ |
-| get /       | List all _Person_ entries      |      403           |
+| get /       | List all _Person_ entries      |      200 / 403     |
 | post /      | Create a new _Person_          |      201 / 402     |
 | get /:id    | Retrieve a _Person_            |      200           |
 | put /:id    | Update a _Person_              |      201 / 402     |
@@ -125,25 +125,61 @@ CRUD Processing Hooks
 
 There are some basic processing hooks you can define in your endpoint:
 
-|             Hook                 |                        Description                               |
-| -------------------------------- | ---------------------------------------------------------------- |
-| pre_create(env,request,params)   | Called before the record is created                              |
-| post_create(env,request,obj)     | Called after the record is saved, if it was saved successfully   |
-| pre_retrieve(env,request,params) | Called before the record is fetched                              |
-| post_retrieve(env,request,obj)   | Called after the record is fetched                               |
-| pre_update(env,request,params)   | Called before the record is updated                              |
-| post_update(env,request,params)  | Called after the record is updated, if it was saved successfully |
-| pre_destroy(env,request,params)  | Called before the record is destroyed                            |
-| post_destroy(env,request,obj)    | Called after the record is destroyed                             |
+|               Hook                      |                        Description                               |
+| --------------------------------------- | ---------------------------------------------------------------- |
+| pre_create(env,request,params)          | Called before the record is created                              |
+| post_create(env,request,obj)            | Called after the record is saved, if it was saved successfully   |
+| pre_retrieve(env,request,params)        | Called before the record is fetched                              |
+| post_retrieve(env,request,obj)          | Called after the record is fetched                               |
+| pre_update(env,request,params)          | Called before the record is updated                              |
+| post_update(env,request,params)         | Called after the record is updated, if it was saved successfully |
+| pre_destroy(env,request,params)         | Called before the record is destroyed                            |
+| post_destroy(env,request,obj)           | Called after the record is destroyed                             |
+| pre_collect(env,request,params)         | Called before the record is collected                            |
+| post_collect(env,request,collection)    | Called after the record is collected                             |
+
 
 Parameters:
 
 * *env* is the current Rack environment
 * *request* is the current request object
 * *obj* is the ORM object corresponding to the record in question
+* *collection* is the collection returned by the ORM
 
 If any of these hooks returns anything other than _nil_, it is assumed to be a response object, which
 is returned immediately, and no further processing is performed.
+
+Collections
+===========
+
+All models in the namespace are *not* collectable by default. To enable collections,
+you need to set the _COLLECTABLE_ constant in the model:
+
+```ruby
+module Models
+  class Person
+    include DataMapper::Resource
+
+    property :id,   Serial
+    property :name, String
+
+    # Enable collection
+    COLLECTABLE = 1
+  end
+end
+```
+
+You can set this constant to 0 to disable it. If you want to enable collections
+on all models in your namespace, simply specify the constant there:
+
+If you want to *not* expose all models by default, simply define the constant as part of the _Models_ module:
+
+```ruby
+module Models
+  # Enable collections on all models by default
+  COLLECTABLE = 1
+end
+```
 
 Selective Exposure
 ==================
