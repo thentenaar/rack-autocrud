@@ -125,23 +125,23 @@ CRUD Processing Hooks
 
 There are some basic processing hooks you can define in your endpoint:
 
-|               Hook                      |                        Description                               |
-| --------------------------------------- | ---------------------------------------------------------------- |
-| pre_create(env,request,params)          | Called before the record is created                              |
-| post_create(env,request,obj)            | Called after the record is saved, if it was saved successfully   |
-| pre_retrieve(env,request,params)        | Called before the record is fetched                              |
-| post_retrieve(env,request,obj)          | Called after the record is fetched                               |
-| pre_update(env,request,params)          | Called before the record is updated                              |
-| post_update(env,request,params)         | Called after the record is updated, if it was saved successfully |
-| pre_destroy(env,request,params)         | Called before the record is destroyed                            |
-| post_destroy(env,request,obj)           | Called after the record is destroyed                             |
-| pre_collect(env,request,params)         | Called before the record is collected                            |
-| post_collect(env,request,collection)    | Called after the record is collected                             |
+|               Hook                        |                        Description                               |
+| ----------------------------------------- | ---------------------------------------------------------------- |
+| pre_create(model,request,params)          | Called before the record is created                              |
+| post_create(model,request,obj)            | Called after the record is saved, if it was saved successfully   |
+| pre_retrieve(model,request,params)        | Called before the record is fetched                              |
+| post_retrieve(model,request,obj)          | Called after the record is fetched                               |
+| pre_update(model,request,params)          | Called before the record is updated                              |
+| post_update(model,request,params)         | Called after the record is updated, if it was saved successfully |
+| pre_destroy(model,request,params)         | Called before the record is destroyed                            |
+| post_destroy(model,request,obj)           | Called after the record is destroyed                             |
+| pre_collect(model,request,params)         | Called before the record is collected                            |
+| post_collect(model,request,collection)    | Called after the record is collected                             |
 
 
 Parameters:
 
-* *env* is the current Rack environment
+* *model* is the model class for the endpoint
 * *request* is the current request object
 * *obj* is the ORM object corresponding to the record in question
 * *collection* is the collection returned by the ORM

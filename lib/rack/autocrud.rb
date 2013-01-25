@@ -84,7 +84,7 @@ module Rack
         @sinatra_opts.each { |sopt,val| endpoint_klass.send(:set,sopt,val) }
 
         # Patch in the routes
-        endpoint_klass.class_exec(model_klass,endpoint,env) { |model,endpoint,env|
+        endpoint_klass.class_exec(model_klass,endpoint) { |model,endpoint|
           def set_request_body(new_body,content_type='text/json')
             env['rack.input']     = StringIO.new(new_body)
             env['CONTENT_LENGTH'] = new_body.length
@@ -97,7 +97,7 @@ module Rack
 
             # Call the pre-create hook
             if self.respond_to?(:pre_collect)
-              ret = pre_collect(env,request,params)
+              ret = pre_collect(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -106,17 +106,17 @@ module Rack
 
             # Call the post-collect hook
             if self.respond_to?(:post_collect)
-              ret = post_collect(env,request,collection)
+              ret = post_collect(model,request,collection)
               return ret unless ret.nil?
             end
 
-            collection.to_json
+            collection.to_json({},request.env)
           end
 
           post '/' do
             # Call the pre-create hook
             if self.respond_to?(:pre_create)
-              ret = pre_create(env,request,params)
+              ret = pre_create(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -134,7 +134,7 @@ module Rack
 
             # Call the post-create hook
             if self.respond_to?(:post_create)
-              ret = post_create(env,request,obj)
+              ret = post_create(model,request,obj)
               return ret unless ret.nil?
             end
 
@@ -144,7 +144,7 @@ module Rack
           get '/:id' do
             # Call the pre-retrieve hook
             if self.respond_to?(:pre_retrieve)
-              ret = pre_retrieve(env,request,params)
+              ret = pre_retrieve(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -152,17 +152,17 @@ module Rack
 
             # Call the post-retrieve hook
             if self.respond_to?(:post_retrieve)
-              ret = post_retrieve(env,request,obj)
+              ret = post_retrieve(model,request,obj)
               return ret unless ret.nil?
             end
 
-            obj.to_json
+            obj.to_json({},request.env)
           end
 
           put '/:id' do
             # Call the pre-update hook
             if self.respond_to?(:pre_update)
-              ret = pre_update(env,request,params)
+              ret = pre_update(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -179,7 +179,7 @@ module Rack
 
             # Call the post-update hook
             if self.respond_to?(:post_update)
-              ret = post_update(env,request,params)
+              ret = post_update(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -189,7 +189,7 @@ module Rack
           delete '/:id' do
             # Call the pre-destroy hook
             if self.respond_to?(:pre_destroy)
-              ret = pre_destroy(env,request,params)
+              ret = pre_destroy(model,request,params)
               return ret unless ret.nil?
             end
 
@@ -198,7 +198,7 @@ module Rack
 
             # Call the post-destroy hook
             if self.respond_to?(:post_destroy)
-              ret = post_destroy(env,request,obj)
+              ret = post_destroy(model,request,obj)
               return ret unless ret.nil?
             end
 
