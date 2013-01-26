@@ -206,10 +206,15 @@ module Rack
           end
         }
 
-        # Now, call the endpoint class (assuming it will return a response)
+        # Now, save PATH_INFO, reset it, and call our endpoint
+        old_path_info       = env['PATH_INFO']
         env['PATH_INFO']    = '/' + uri.join('/')
         env['CONTENT_TYPE'] = 'text/json'
-        return endpoint_klass.call(env)
+        response            = endpoint_klass.call(env)
+
+        # Restore PATH_INFO
+        env['PATH_INFO'] = old_path_info
+        return response
       end
 
       # Otherwise, pass the request down the chain...
