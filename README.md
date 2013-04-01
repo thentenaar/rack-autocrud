@@ -87,15 +87,17 @@ The routing is simple. You have a model *Models::Person*. You've added something
 _config.ru_. This middleware will dynamically create a _Sinatra::Base_ subclass called *Endpoints::Person*
 (if it already exists, these routes are added to it) which will contain the following routes:
 
-| Route       |           Action               | HTTP Response Code |
-| ----------- | -------------------------------| ------------------ |
-| get /       | List all _Person_ entries      |      200 / 403     |
-| post /      | Create a new _Person_          |      201 / 402     |
-| get /:id    | Retrieve a _Person_            |      200           |
-| put /:id    | Update a _Person_              |      201 / 402     |
-| delete /:id | Destroy a _Person_             |      204           |
+| Route       |           Action                | HTTP Response Code |
+| ----------- | --------------------------------| ------------------ |
+| get /       | List all _Person_ entries       |      200 / 403     |
+| post /      | Create a new _Person_           |      201 / 402     |
+| get /:id    | Retrieve a _Person_             |      200           |
+| put /:id    | Update a _Person_               |      201 / 402     |
+| delete /:id | Destroy a _Person_              |      204           |
+| get /count  | Get a count of _Person_ entries |      200 / 403     |
 
 The middleware will route based on the URI. Thus, _/person_ would correspond to *Endpoints::Person*'s _get /_ route.
+The _/count_ route returns the total number of _Person_ entries in the database, if _COLLECTABLE_ is set.
 
 Overriding Generated Routes
 ===========================

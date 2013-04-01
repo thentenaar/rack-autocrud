@@ -92,6 +92,13 @@ module Rack
             return nil
           end
 
+          get '/count' do
+            halt [ 403, '{ "error": "Access Denied" }' ] unless model_klass.const_defined?(:COLLECTABLE) && model.const_get(:COLLECTABLE)
+
+            # Return the count
+            { :count => model.all.count }.to_json
+          end
+
           get '/' do
             halt [ 403, '{ "error": "Access Denied" }' ] unless model_klass.const_defined?(:COLLECTABLE) && model.const_get(:COLLECTABLE)
 
