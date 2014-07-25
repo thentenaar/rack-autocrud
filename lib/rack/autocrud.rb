@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2012 Tim Hentenaar. All Rights Reserved.
 #
-# Licensed under the Simplified BSD License. 
+# Licensed under the Simplified BSD License.
 # See the LICENSE file for details.
 #
 # This Rack middleware automatically generates Sinatra
@@ -39,38 +39,55 @@ module Rack
       # If this is to '/' pass it on
       return @app.call(env) if endpoint.nil?
 
-      # Enumerate through all defined classes, checking for the model / endpoint
+      # Enumerate through all defined classes, checking for the
+      # model / endpoint
       ObjectSpace.each_object(Class) { |klass|
-        model_klass    = klass if String(klass.name).downcase == String(@model_namespace    + '::' + endpoint).downcase
-        endpoint_klass = klass if String(klass.name).downcase == String(@endpoint_namespace + '::' + endpoint).downcase
+        kname = String(klass.name).downcase
+        mname = String(@model_namespace    + '::' + endpoint).downcase
+        ename = String(@endpoint_namespace + '::' + endpoint).downcase
+
+        model_klass    = klass if kname == mname
+        endpoint_klass = klass if kname == ename
       }
 
       # Lazily locate the model namespace module (if we haven't already)
       if @model_mod.nil?
         ObjectSpace.each_object(Module) { |klass|
-          @model_mod = klass if String(klass.name).downcase == @model_namespace.downcase
+          if String(klass.name).downcase == @model_namespace.downcase
+            @model_mod = klass
+          end
         }
       end
 
-      # Lazily locate the endpoint namespace module (if we haven't already)
+      # Lazily locate the endpoint namespace module (if we haven't
+      # already)
       if endpoint_klass.nil? && @endpoint_mod.nil?
         ObjectSpace.each_object(Module) { |klass|
-          @endpoint_mod = klass if String(klass.name).downcase == @endpoint_namespace.downcase
+          if String(klass.name).downcase == @endpoint_namespace.downcase
+            @endpoint_mod = klass
+          end
         }
       end
 
       # Make sure we copy the :EXPOSE constant if it's defined upstream
-      if !model_klass.nil? && !model_klass.const_defined?(:EXPOSE) && @model_mod.const_defined?(:EXPOSE)
+      if !model_klass.nil? && !model_klass.const_defined?(:EXPOSE) &&
+         @model_mod.const_defined?(:EXPOSE)
         model_klass.const_set(:EXPOSE,@model_mod.const_get(:EXPOSE))
       end
 
-      # Make sure we copy the :COLLECTABLE constant if it's defined upstream
-      if !model_klass.nil? && !model_klass.const_defined?(:COLLECTABLE) && @model_mod.const_defined?(:COLLECTABLE)
-        model_klass.const_set(:COLLECTABLE,@model_mod.const_get(:COLLECTABLE))
+      # Make sure we copy the :COLLECTABLE constant if it's defined
+      # upstream
+      if !model_klass.nil? && !model_klass.const_defined?(:COLLECTABLE) &&
+         @model_mod.const_defined?(:COLLECTABLE)
+        model_klass.const_set(:COLLECTABLE,
+                              @model_mod.const_get(:COLLECTABLE))
       end
 
       # Now, if we've got something, do our magic.
-      if !model_klass.nil? && (!model_klass.const_defined?(:EXPOSE) || model_klass.const_get(:EXPOSE))
+      if !model_klass.nil? && (
+        !model_klass.const_defined?(:EXPOSE) ||
+        model_klass.const_get(:EXPOSE)
+      )
         # If we don't have an endpoint class, make one
         if endpoint_klass.nil?
           endpoint_klass = Class.new(Sinatra::Base)
@@ -78,13 +95,17 @@ module Rack
         end
 
         # Add in any specified helpers
-        @includes.each { |inc| endpoint_klass.send(:include,inc) } unless @includes.nil?
+        @includes.each { |inc|
+          endpoint_klass.send(:include,inc)
+        } unless @includes.nil?
 
         # Set any Sinatra options
-        @sinatra_opts.each { |sopt,val| endpoint_klass.send(:set,sopt,val) }
+        @sinatra_opts.each { |sopt,val|
+          endpoint_klass.send(:set,sopt,val)
+        }
 
         # Patch in the routes
-        endpoint_klass.class_exec(model_klass,endpoint) { |model,endpoint|
+        endpoint_klass.class_exec(model_klass,endpoint) { |model,ep|
           def set_request_body(new_body,content_type='text/json')
             env['rack.input']     = StringIO.new(new_body)
             env['CONTENT_LENGTH'] = new_body.length
@@ -93,14 +114,22 @@ module Rack
           end
 
           get '/count' do
-            halt [ 403, '{ "error": "Access Denied" }' ] unless model_klass.const_defined?(:COLLECTABLE) && model.const_get(:COLLECTABLE)
+            halt [
+              403,
+              '{ "error": "Access Denied" }'
+            ] unless model_klass.const_defined?(:COLLECTABLE) &&
+                     model.const_get(:COLLECTABLE)
 
             # Return the count
             { :count => model.all.count }.to_json
           end
 
           get '/' do
-            halt [ 403, '{ "error": "Access Denied" }' ] unless model_klass.const_defined?(:COLLECTABLE) && model.const_get(:COLLECTABLE)
+            halt [
+              403,
+              '{ "error": "Access Denied" }'
+            ] unless model_klass.const_defined?(:COLLECTABLE) &&
+                     model.const_get(:COLLECTABLE)
 
             # Call the pre-create hook
             if self.respond_to?(:pre_collect)
@@ -134,9 +163,18 @@ module Rack
             obj = nil
             begin
               obj = model.create(JSON.parse(request.body.read))
-              halt [ 402, '{ "error": "Failed to save ' + endpoint + '" }' ] unless obj && obj.saved?
+              halt [
+                402,
+                '{ "error": "Failed to save ' + ep + '" }'
+              ] unless obj && obj.saved?
             rescue JSON::ParserError
-              halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
+              halt [
+                400,
+                {
+                  'error' => 'Invalid JSON in request body.',
+                  'details' => $!
+                }.to_json
+              ]
             end
 
             # Call the post-create hook
@@ -178,10 +216,18 @@ module Rack
 
             # Attempt to update the model
             begin
-              saved = model.get(params[:id]).update(JSON.parse(request.body.read))
+              saved = model.get(params[:id]).update(
+                JSON.parse(request.body.read)
+              )
               halt [ 402, '{ "error": "Access Denied" }' ] unless saved
             rescue JSON::ParserError
-              halt [ 400, { 'error' => 'Invalid JSON in request body.', 'details' => $! }.to_json ]
+              halt [
+                400,
+                {
+                  'error' => 'Invalid JSON in request body.',
+                  'details' => $!
+                }.to_json
+              ]
             end
 
             # Call the post-update hook
@@ -201,7 +247,10 @@ module Rack
             end
 
             obj = model.get(params[:id])
-            return [ 402, '{ "error": "Failed to delete ' + endpoint + '" }' ] unless obj && obj.destroy
+            return [
+              402,
+              '{ "error": "Failed to delete ' + ep + '" }'
+            ] unless obj && obj.destroy
 
             # Call the post-destroy hook
             if self.respond_to?(:post_destroy)

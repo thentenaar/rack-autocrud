@@ -1,9 +1,8 @@
 rack-autocrud
 =============
 
-Rack middleware that works with Sinatra and DataMapper to dynamically
-create CRUD endpoints and routes based on models. It ain't perfect, but
-it works.
+Rack middleware that works with Sinatra to dynamically create CRUD
+endpoints and routes based on models. It ain't perfect, but it works.
 
 These generated CRUD routes are assumed to return a Rack response.
 
@@ -11,6 +10,10 @@ It's important to note, that you models and endpoints must be in separate
 modules (read: namespaces).
 
 Input and Response data are formatted as JSON.
+
+NOTE: While this gem is designed to work with DataMapper, it may be
+usable with Sequel as well (via ``Sequel::Plugins::JsonSerializer``)
+since none of the code in ``rack-autocrud`` is DataMapper-dependent.
 
 Licensing
 =========
@@ -21,8 +24,10 @@ Requirements
 ============
 
 * sinatra
-* datamapper
 * json
+
+For DataMapper:
+	* dm-serializer
 
 Installation
 ============
@@ -229,8 +234,8 @@ end
 Helper Functions
 ================
 
-This middleware also adds a helper function to the endpoints, *set_request_body*, to allow 
-you to replace the request body from the aforementioned hooks, 
+This middleware also adds a helper function to the endpoints, *set_request_body*, to allow
+you to replace the request body from the aforementioned hooks,
 namely *pre_create* and *pre_update*.
 
 This function is defined as:
